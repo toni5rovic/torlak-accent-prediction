@@ -115,7 +115,14 @@ def main(args: argparse.Namespace) -> None:
         start_time = time.time()
         
         output = model(torlakian_data.test.data["windows"])
+        
+        # The actiation function in the output layer was sigmoid, 
+        # so by doing this operation we get boolean values on the output
+        # that state if the current character should be uppercased or not
         output = output > 0.5
+
+        # Transforming to uppercase to mark the accent position
+        # is done with the function `do_uppercase`
         predictions = map(do_uppercase, range(len(output)))
         output_text = ''.join(predictions)
         predictions_file.write(output_text)
