@@ -68,6 +68,7 @@ class TorlakianData:
             for key, value in alphabet_map.items():
                 self._alphabet[value] = key
 
+        # Cleans the data of annotator notes in the speaker utterances
         def clean_data(self, data):
             annotations = [
                 '((laugh))', 
@@ -93,11 +94,14 @@ class TorlakianData:
             out_lines = []
             for line in data.split('\n'):
                 new_line = line
+
+                # Removing all occurrences of an annotation from the current line
                 for annotation in annotations:
                     while annotation in new_line:
                         new_line = new_line.replace(annotation, '')
                         new_line = new_line.strip()
-                        
+                
+                # Using only non-empty lines
                 if new_line is not None and len(new_line) != 0:
                     out_lines.append(new_line)
 
