@@ -11,7 +11,7 @@ Torlakian dialect is a nonstandard dialect of Serbian language, mostly spoken in
 - lexical: more influenced by Turkish and Greek, usage of words that are considered archaic in standard Serbian
 - morphology: less complex inflection system - instrumental case merges with genitive case, locative and genitive merge with nominative
 - syntax: loss of infinitive, 
-- phonology: lack of phoneme /x/, syllabic /l/, appeareance of schwa /ə/, accent position and quality
+- phonology: lack of phoneme /x/, syllabic /l/, appeareance of schwa /ə/, different accent position and quality
 
 In the general population, there is a trend to consider this dialect a lesser form of Serbian, with attached stereotypes of it being used by rural, uneducated and old people. Nowadays, young speakers from the area abandon Torlak features and adopt the standard ones instead. This makes Torlak dialect an endangered one.
 
@@ -116,6 +116,8 @@ Let's take a look at some of the mistakes the model makes.
   - **peškIrčE** pElena
   - kadA se onAj trAktor **IsprAvi**
 - Due to the speakers who mix standard and dialect pronounciation, we have mixed data in the corpus. Therefore, the model might not be able to fully capture the "correct" Torlak accent position in every case. There are many cases where the accent position in the output is more standard than dialectal and the possible explanation for this might be exactly the dialectal code mixing that appeears with the speakers.
+- Model often doesn't accentuate any of the syllables in the word. This is invalid, as the model should put an accent in every polysyllabic word.
+- Model often does uppercase (marking the accent position) on consonants, even though this is not valid since the accent can only be on vowels or consonants 'L' and 'R'.
 
 # Using the model
 
@@ -134,17 +136,12 @@ optional arguments:
   --seed SEED        Random seed.
 ```
 
-For example, running the model on a sentence 
-```
-kad sam bila dete mi smo božić slavili sa puno običaji
-``` 
-gives output
-```
-```
-
 # Future work
 
-It might be interesting to try out different neural architectures and maybe use more data in order to get better performance.
+It might be interesting to try out different neural architectures and maybe use more data in order to get better performance. However, getting more data is hard since currently no other corpus exists with Torlak accent labeling. Some approaches for synthetic data might be useful, but even plaintext Torlak corpora are very hard to find. For this, some digitalization of physical resources would be needed.
+
+It would be better if we could push the model to produce one accent per word. Furthemore, model should skip invalid accent positions (consonants that are not vowels or consonants "L" and "R").
+Putting these constraints on the model would increase the overall accuracy by a big margin, considering that the baseline (all lowercase letters) is 86.37%, while we managed to go up to 98.14% with this simple model. Improving the model by using the constraints would make it work very well with a very high accuracy.
 
 # References
 
