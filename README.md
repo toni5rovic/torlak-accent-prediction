@@ -4,6 +4,7 @@
 
 Antonije Petrović, Charles University in Prague
 
+This project has been done as a part of "Language Technologies in Practice" course at the Charles University in Prague. In this project, neural model is built with a task of accent prediction for Torlak dialect of Serbian language. Multiple architectures are tried with different hyperparameters. The model in the end gives decent results (considering prediction accuracy), although there is room for improvement.
 
 # Introduction
 

@@ -15,16 +15,19 @@ class TorlakianData:
     URL = 'https://www.clarin.si/repository/xmlui/handle/11356/1281/allzip'
 
 
-    # Class for working with the data in a customized way. 
-    # - window: number of characters left and right from the current position
-    # - alphabet: maximum number of most frequent characters that are going to stay in the data,
-    #   while the rest are replaced by <unk>
-    # - clean: boolean that states if the data should be cleaned of annotator's marks
-    # - seed: for setting fixed random seed
+    # Class for working with the data in a customized way.
+    # - window: int = number of characters left and right from the current position
+    # 
+    # - alphabet: int  = maximum number of most frequent characters that are going to stay in the data,
+    #                    while the rest are replaced by <unk>
+    #
+    # - clean: bool = states if the data should be cleaned of annotator's marks
+    # 
+    # - seed: int  = fixing random seed
     class Dataset:
         def __init__(self, data: str, window: int, alphabet: Union[int, List[str]], clean: bool = False, seed: int = 42) -> None:
             if clean:
-                data = self.clean_data(data)
+                data = self._clean_data(data)
 
             self._window = window
             self._text = data
@@ -69,7 +72,7 @@ class TorlakianData:
                 self._alphabet[value] = key
 
         # Cleans the data of annotator notes in the speaker utterances
-        def clean_data(self, data):
+        def _clean_data(self, data: str) -> str:
             annotations = [
                 '((laugh))', 
                 '((XXX))',
@@ -135,7 +138,7 @@ class TorlakianData:
             """TF Dataset object"""
             return tf.data.Dataset.from_tensor_slices(self._data)
 
-    def download(self):
+    def _download(self) -> str:
         """Downloads the corpus"""
         
         directory = "data"
@@ -148,10 +151,9 @@ class TorlakianData:
 
         return path
 
-    def unzip(self, path):
+    def _unzip(self, path: str) -> None:
         """Unzipping of the corpus .zip archive"""
 
-        print("Unzipping...")
         with zipfile.ZipFile(path, 'r') as zip_ref:
             directory = os.path.dirname(path)
             zip_ref.extractall(directory)
@@ -165,9 +167,7 @@ class TorlakianData:
 
                 os.remove(full_path)
         
-        print("Unzipping finished.")
-    
-    def join_data(self):
+    def _join_data(self) -> None:
         """Joins all files in the corpus into one big dataset, 
         then performs 70:20:10 train-val-test split and 
         saves these into separate files"""
@@ -202,9 +202,10 @@ class TorlakianData:
             f.write('\n'.join(test))
 
     def __init__(self, window: int, alphabet_size: int = 0, clean: bool = False):
-        path = self.download()
-        self.unzip(path)
-        self.join_data()
+        """Constructor for TorlakianData class"""
+        path = self._download()
+        self._unzip(path)
+        self._join_data()
 
         for dataset in ["train", "val", "test"]:
             with open(f"data/{dataset}.txt", "r") as dataset_file:
@@ -217,7 +218,7 @@ class TorlakianData:
             ))
 
     train: Dataset
-    dev: Dataset
+    val: Dataset
     test: Dataset
 
     # Evaluation infrastructure.
@@ -226,17 +227,15 @@ class TorlakianData:
         gold = gold_dataset.text
 
         if len(predictions) < len(gold):
-            raise RuntimeError("The predictions are shorter than gold data: {} vs {}.".format(
-                len(predictions), len(gold)))
+            raise RuntimeError(f"The predictions are shorter than gold data: {len(predictions)} vs {len(gold)}.")
 
         correct = 0
         for i in range(len(gold)):
             if predictions[i].lower() != gold[i].lower():
-                raise RuntimeError("The predictions and gold data differ on position {}: {} vs {}.".format(
-                    i, repr(predictions[i:i + 20].lower()), repr(gold[i:i + 20].lower())))
+                raise RuntimeError(f"The predictions and gold data differ on position {i}: {repr(predictions[i:i+20].lower())} vs {repr(gold[i:i + 20].lower())}.")
 
             correct += gold[i] == predictions[i]
-        return 100 * correct / len(gold)
+        return 100.0 * correct / len(gold)
 
     @staticmethod
     def evaluate_file(gold_dataset: Dataset, predictions_file: TextIO) -> float:
@@ -248,7 +247,7 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--evaluate", default=None, type=str, help="Prediction file to evaluate")
-    parser.add_argument("--dataset", default="dev", type=str, help="Gold dataset to evaluate")
+    parser.add_argument("--dataset", default="val", type=str, help="Gold dataset to evaluate")
     parser.add_argument("--clean", default=False, help="Clean data", action='store_true')
     args = parser.parse_args()
     

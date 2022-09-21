@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 import argparse
-import datetime
 import os
-import re
 os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")  # Report only TF errors by default
 
 from tqdm.auto import tqdm
 import numpy as np
 import tensorflow as tf
-import time
 from torlakian_data import TorlakianData
+from inference import inference
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
@@ -22,6 +20,8 @@ parser.add_argument("--threads", default=1, type=int, help="Maximum number of th
 parser.add_argument("--seed", default=42, type=int, help="Random seed.")
 
 def main(args: argparse.Namespace) -> None:
+    """Uses the loaded model to do the inference and outputs to the standard output"""
+
     # Fix random seeds and threads
     tf.keras.utils.set_random_seed(args.seed)
     tf.config.threading.set_inter_op_parallelism_threads(args.threads)
@@ -51,13 +51,6 @@ def main(args: argparse.Namespace) -> None:
 
     model.load_weights(args.model)
     
-    def do_uppercase(index):
-        letter = dataset.text[index]
-        if output[index] and letter in dataset.alphabet:
-            return letter.upper()
-        else:
-            return letter
-
     input_text = ""
     if os.path.isfile(args.text):
         with open(args.text, "r", encoding="utf-8") as input_file:
@@ -66,13 +59,13 @@ def main(args: argparse.Namespace) -> None:
     else:
         input_text = args.text
 
+    # Creating object of class Dataset for the given input_text
     dataset = torlakian_data.Dataset(input_text, WINDOW, ALPHABET_SIZE, CLEAN)
-    output = model(dataset.data["windows"])
-    output = output > 0.5
-
-    predictions = map(do_uppercase, range(len(output)))
-    output_text = ''.join(predictions)
     
+    # Inference on the given dataset using loaded model
+    output_text = inference(model, dataset)
+
+    # Printing processed text to standard output
     print(output_text)
 
 

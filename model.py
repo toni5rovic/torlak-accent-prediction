@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 import argparse
-import datetime
 import os
-import re
 os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")  # Report only TF errors by default
 
 from tqdm.auto import tqdm
@@ -10,8 +8,9 @@ import numpy as np
 import tensorflow as tf
 import time
 from torlakian_data import TorlakianData
+from inference import inference
 
-# os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 # Based on: https://github.com/ufal/npfl114/blob/master/labs/03/uppercase.py
 
@@ -45,7 +44,7 @@ def main(args: argparse.Namespace) -> None:
 
     # Load data
     torlakian_data = TorlakianData(args.window, args.alphabet_size, args.clean)
-
+    
     print("-" * 30)
     print(f"Experiment {args.experiment_id}")
     
@@ -103,28 +102,13 @@ def main(args: argparse.Namespace) -> None:
         callbacks=[tb_callback, stop_early],
     )
 
-    def do_uppercase(index):
-        letter = torlakian_data.test.text[index]
-        if output[index] and letter in torlakian_data.test.alphabet:
-            return letter.upper()
-        else:
-            return letter
-
+    
     os.makedirs(args.logdir, exist_ok=True)
     with open(os.path.join(args.logdir, "torlak_test.txt"), "w", encoding="utf-8") as predictions_file:
         start_time = time.time()
         
-        output = model(torlakian_data.test.data["windows"])
-        
-        # The actiation function in the output layer was sigmoid, 
-        # so by doing this operation we get boolean values on the output
-        # that state if the current character should be uppercased or not
-        output = output > 0.5
+        output_text = inference(model, torlakian_data.test)
 
-        # Transforming to uppercase to mark the accent position
-        # is done with the function `do_uppercase`
-        predictions = map(do_uppercase, range(len(output)))
-        output_text = ''.join(predictions)
         predictions_file.write(output_text)
 
         end_time = time.time()
