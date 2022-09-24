@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+import argparse
 import os
 import sys
 from typing import Dict, List, TextIO, Union
@@ -8,6 +10,12 @@ import numpy as np
 import tensorflow as tf
 
 # Based on: https://github.com/ufal/npfl114/blob/master/labs/03/uppercase_data.py
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--evaluate", default=None, type=str, help="Prediction file to evaluate")
+parser.add_argument("--dataset", default="val", type=str, help="Gold dataset to evaluate")
+parser.add_argument("--clean", default=False, help="Clean data", action='store_true')
+args = parser.parse_args()
 
 class TorlakianData:
     LABELS: int = 2
@@ -244,13 +252,6 @@ class TorlakianData:
 
 
 if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--evaluate", default=None, type=str, help="Prediction file to evaluate")
-    parser.add_argument("--dataset", default="val", type=str, help="Gold dataset to evaluate")
-    parser.add_argument("--clean", default=False, help="Clean data", action='store_true')
-    args = parser.parse_args()
-    
     if args.evaluate:
         with open(args.evaluate, "r", encoding="utf-8-sig") as predictions_file:
             accuracy = TorlakianData.evaluate_file(getattr(TorlakianData(0, clean=args.clean), args.dataset), predictions_file)
